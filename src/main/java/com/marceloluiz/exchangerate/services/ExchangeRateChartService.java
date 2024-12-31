@@ -1,18 +1,26 @@
 package com.marceloluiz.exchangerate.services;
 
-import org.knowm.xchart.BitmapEncoder;
-import org.knowm.xchart.XYChart;
-import org.knowm.xchart.XYChartBuilder;
-import org.knowm.xchart.XYSeries;
-import org.knowm.xchart.style.markers.SeriesMarkers;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.DateTickUnit;
+import org.jfree.chart.axis.DateTickUnitType;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @Service
@@ -22,48 +30,70 @@ public class ExchangeRateChartService {
     public void generateChart(List<String> rawDates, List<Double> rates, String baseCurrency, String targetCurrency) {
         try {
             List<Date> dates = convertDates(rawDates);
-            double latestRate = rates.getLast();
 
-            XYChart chart = new XYChartBuilder()
-                    .width(800)
-                    .height(400)
-                    .title("1 " + baseCurrency.toUpperCase() + " = " + String.format("%.4f", latestRate) + " " + targetCurrency.toUpperCase())
-                    .xAxisTitle("")
-                    .yAxisTitle("")
-                    .build();
+            LinkedHashMap<Date, Double> uniqueData = new LinkedHashMap<>();
+            for (int i = 0; i < dates.size(); i++) {
+                uniqueData.put(dates.get(i), rates.get(i));
+            }
 
-            chart.getStyler().setLegendVisible(false);
-            chart.getStyler().setChartTitleFont(new Font("Arial", Font.BOLD, 24));
-            chart.getStyler().setAxisTitlesVisible(true);
-            chart.getStyler().setYAxisDecimalPattern("#,##0.00 " + targetCurrency.toUpperCase());
-            chart.getStyler().setChartBackgroundColor(Color.WHITE);
-            chart.getStyler().setPlotBackgroundColor(Color.WHITE);
-            chart.getStyler().setPlotBorderVisible(false);
-            chart.getStyler().setPlotGridVerticalLinesVisible(false);
-            chart.getStyler().setPlotGridHorizontalLinesVisible(false);
-            chart.getStyler().setYAxisTicksVisible(true);
-            chart.getStyler().setXAxisTicksVisible(true);
-            chart.getStyler().setXAxisTickMarkSpacingHint(80);
-            chart.getStyler().setPlotGridLinesVisible(false);
+            List<Date> uniqueDates = new ArrayList<>(uniqueData.keySet());
+            List<Double> uniqueRates = new ArrayList<>(uniqueData.values());
 
-            chart.setCustomXAxisTickLabelsFormatter(date -> new SimpleDateFormat("d MMM").format(date));
+            TimeSeries series = new TimeSeries(baseCurrency.toUpperCase() + " to " + targetCurrency.toUpperCase());
+            for (int i = 0; i < uniqueDates.size(); i++) {
+                series.add(new Day(uniqueDates.get(i)), uniqueRates.get(i));
+            }
 
-            XYSeries horizontalLine = chart.addSeries("Horizontal Line",
-                    List.of(dates.getFirst(), dates.getLast()),
-                    List.of(latestRate, latestRate));
-            horizontalLine.setMarker(SeriesMarkers.NONE);
-            horizontalLine.setLineColor(new Color(50, 50, 255));
-            horizontalLine.setLineStyle(new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[]{5.0f}, 0.0f)); // Thin dotted line
+            TimeSeriesCollection dataset = new TimeSeriesCollection();
+            dataset.addSeries(series);
 
-            XYSeries series = chart.addSeries(baseCurrency.toUpperCase() + " to " + targetCurrency.toUpperCase(), dates, rates);
-            series.setMarker(SeriesMarkers.NONE);
-            series.setLineColor(Color.BLUE);
-            series.setLineStyle(new BasicStroke(2.0f));
+            JFreeChart chart = ChartFactory.createTimeSeriesChart(
+                    "1 " + baseCurrency.toUpperCase() + " = " + String.format("%.4f", rates.getLast()) + " " + targetCurrency.toUpperCase(),
+                    "",
+                    "",
+                    dataset,
+                    false,
+                    false,
+                    false
+            );
+
+            // Update title font
+            chart.setTitle(new org.jfree.chart.title.TextTitle(
+                    "1 " + baseCurrency.toUpperCase() + " = " + String.format("%.4f", rates.get(rates.size() - 1)) + " " + targetCurrency.toUpperCase(),
+                    new Font("Arial", Font.BOLD, 24)
+            ));
+
+            XYPlot plot = (XYPlot) chart.getPlot();
+            plot.setBackgroundPaint(Color.WHITE);
+            plot.setDomainGridlinePaint(Color.LIGHT_GRAY);
+            plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+
+            XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+            renderer.setSeriesPaint(0, Color.BLUE);
+            renderer.setSeriesStroke(0, new BasicStroke(2.0f));
+
+            TimeSeries horizontalLineSeries = new TimeSeries("Latest Rate");
+            double latestRate = uniqueRates.getLast();
+            horizontalLineSeries.add(new Day(uniqueDates.getFirst()), latestRate);
+            horizontalLineSeries.add(new Day(uniqueDates.getLast()), latestRate);
+            dataset.addSeries(horizontalLineSeries);
+
+            renderer.setSeriesPaint(1, new Color(50, 50, 255));
+            renderer.setSeriesStroke(1, new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                    1.0f, new float[]{5.0f}, 0.0f));
+            plot.setRenderer(renderer);
+
+            DateAxis xAxis = (DateAxis) plot.getDomainAxis();
+            xAxis.setDateFormatOverride(new SimpleDateFormat("d MMM yy"));
+            xAxis.setRange(uniqueDates.getFirst(), uniqueDates.getLast());
+
+            NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
+            yAxis.setNumberFormatOverride(new java.text.DecimalFormat("#,##0.00 " + targetCurrency.toUpperCase()));
 
             createChartsDirectory();
-            BitmapEncoder.saveBitmap(chart, "charts/chart", BitmapEncoder.BitmapFormat.PNG);
+            File outputFile = new File("charts/chart.png");
+            ImageIO.write(chart.createBufferedImage(800, 400), "png", outputFile);
 
-            System.out.println("Chart saved successfully!");
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate chart", e);
         }
