@@ -27,25 +27,33 @@ public class ExchangeRateChartService {
 
             // Create the chart
             XYChart chart = new XYChartBuilder()
-                    .width(1000)
-                    .height(600)
+                    .width(800)
+                    .height(400)
                     .title("1 " + baseCurrency.toUpperCase() + " = " + String.format("%.5f", latestRate) + " " + targetCurrency.toUpperCase())
                     .xAxisTitle("")
-                    .yAxisTitle("Exchange Rate")
+                    .yAxisTitle("")
                     .build();
 
             // Customize the chart style
             chart.getStyler().setLegendVisible(false);
             chart.getStyler().setChartTitleFont(new Font("Arial", Font.BOLD, 24));
-            chart.getStyler().setAxisTitlesVisible(false);
-            chart.getStyler().setYAxisDecimalPattern("#,##0.00000"); // Format as currency
+            chart.getStyler().setAxisTitlesVisible(true);
+            chart.getStyler().setYAxisDecimalPattern("#,##0.0000"); // Format BRL rates
             chart.getStyler().setChartBackgroundColor(Color.WHITE); // Plain white background
             chart.getStyler().setPlotBackgroundColor(Color.WHITE); // Plain white plot background
             chart.getStyler().setPlotBorderVisible(false); // Remove plot border
             chart.getStyler().setPlotGridVerticalLinesVisible(false); // Remove vertical gridlines
             chart.getStyler().setPlotGridHorizontalLinesVisible(false); // Remove horizontal gridlines
-            chart.getStyler().setXAxisTicksVisible(false); // Hide X-axis tick marks
-            chart.getStyler().setYAxisTicksVisible(false); // Hide Y-axis tick marks
+            chart.getStyler().setYAxisTicksVisible(true); // Show Y-axis ticks
+            chart.getStyler().setXAxisTicksVisible(true); // Show X-axis ticks
+            chart.getStyler().setXAxisTickMarkSpacingHint(80); // Control X-axis tick spacing
+            chart.getStyler().setPlotGridLinesVisible(false); // Remove all gridlines
+
+
+            // Customize X-axis labels to show only key dates
+            chart.setCustomXAxisTickLabelsFormatter(date -> {
+                return new SimpleDateFormat("dd-MM").format(date); // Format and display all dates
+            });
 
             // Add a thin dotted horizontal line for the latest rate
             XYSeries horizontalLine = chart.addSeries("Horizontal Line",
