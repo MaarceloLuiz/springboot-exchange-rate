@@ -11,8 +11,13 @@ public class MarkdownService {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT);
 
     public String generateChartMarkdown(String chartPath){
-        return "## Exchange Rate Chart\n\n" +
-                "![Exchange Rate Chart](" + chartPath + ")";
+        StringBuilder markdown = new StringBuilder();
+        markdown.append("""
+                ## Exchange Rate Chart
+                
+                ![Exchange Rate Chart](""").append(chartPath).append(")");
+        generateUpdatedAt(markdown);
+        return markdown.toString();
     }
 
     private void generateUpdatedAt(StringBuilder markdown){
