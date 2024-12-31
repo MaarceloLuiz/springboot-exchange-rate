@@ -1,0 +1,29 @@
+name: "Update Exchange Rate"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * *"
+  
+jobs:
+  run-weather-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Run Action
+        uses: MaarceloLuiz/springboot-exchange-rate@v1.0.0
+        with:
+          BASE_CURRENCY: ${{ vars.BASE_CURRENCY }}
+          TARGET_CURRENCY: ${{ vars.TARGET_CURRENCY }}
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add .
+          git commit -m "Update weather data" || echo "No changes to commit"
+          git push origin main
