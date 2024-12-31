@@ -1,0 +1,16 @@
+name: Exchange Rate Chart
+description: Generate a Exchange Rate Chart dynamically for README.md.
+inputs:
+  BASE_CURRENCY:
+    description: base currency
+    required: true
+  TARGET_CURRENCY:
+    description: target currency
+    required: true
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    BASE_CURRENCY: ${{ inputs.BASE_CURRENCY }}
+    TARGET_CURRENCY: ${{ inputs.TARGET_CURRENCY }}
