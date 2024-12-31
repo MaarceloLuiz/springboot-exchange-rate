@@ -11,5 +11,5 @@ public class ExchangeRateProperties {
     private String baseCurrency;
 
     @Value("${TARGET_CURRENCY}") // Default forecast days
-    private int days;
+    private String targetCurrency;
 }

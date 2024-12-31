@@ -6,5 +6,6 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter
 public class FileProperties {
-    private final String readmePath = "README.md";
+    private final String README_PATH = "README.md";
+    private final String CHART_IMAGE_PATH = "charts/chart.png";
 }
