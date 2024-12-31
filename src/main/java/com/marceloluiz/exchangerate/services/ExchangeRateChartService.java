@@ -11,6 +11,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -21,53 +22,43 @@ public class ExchangeRateChartService {
     public void generateChart(List<String> rawDates, List<Double> rates, String baseCurrency, String targetCurrency) {
         try {
             List<Date> dates = convertDates(rawDates);
-
-            // Get the most recent exchange rate
             double latestRate = rates.getLast();
 
-            // Create the chart
             XYChart chart = new XYChartBuilder()
                     .width(800)
                     .height(400)
-                    .title("1 " + baseCurrency.toUpperCase() + " = " + String.format("%.5f", latestRate) + " " + targetCurrency.toUpperCase())
+                    .title("1 " + baseCurrency.toUpperCase() + " = " + String.format("%.4f", latestRate) + " " + targetCurrency.toUpperCase())
                     .xAxisTitle("")
                     .yAxisTitle("")
                     .build();
 
-            // Customize the chart style
             chart.getStyler().setLegendVisible(false);
             chart.getStyler().setChartTitleFont(new Font("Arial", Font.BOLD, 24));
             chart.getStyler().setAxisTitlesVisible(true);
-            chart.getStyler().setYAxisDecimalPattern("#,##0.0000"); // Format BRL rates
-            chart.getStyler().setChartBackgroundColor(Color.WHITE); // Plain white background
-            chart.getStyler().setPlotBackgroundColor(Color.WHITE); // Plain white plot background
-            chart.getStyler().setPlotBorderVisible(false); // Remove plot border
-            chart.getStyler().setPlotGridVerticalLinesVisible(false); // Remove vertical gridlines
-            chart.getStyler().setPlotGridHorizontalLinesVisible(false); // Remove horizontal gridlines
-            chart.getStyler().setYAxisTicksVisible(true); // Show Y-axis ticks
-            chart.getStyler().setXAxisTicksVisible(true); // Show X-axis ticks
-            chart.getStyler().setXAxisTickMarkSpacingHint(80); // Control X-axis tick spacing
-            chart.getStyler().setPlotGridLinesVisible(false); // Remove all gridlines
+            chart.getStyler().setYAxisDecimalPattern("#,##0.00 " + targetCurrency.toUpperCase());
+            chart.getStyler().setChartBackgroundColor(Color.WHITE);
+            chart.getStyler().setPlotBackgroundColor(Color.WHITE);
+            chart.getStyler().setPlotBorderVisible(false);
+            chart.getStyler().setPlotGridVerticalLinesVisible(false);
+            chart.getStyler().setPlotGridHorizontalLinesVisible(false);
+            chart.getStyler().setYAxisTicksVisible(true);
+            chart.getStyler().setXAxisTicksVisible(true);
+            chart.getStyler().setXAxisTickMarkSpacingHint(80);
+            chart.getStyler().setPlotGridLinesVisible(false);
 
+            chart.setCustomXAxisTickLabelsFormatter(date -> new SimpleDateFormat("d MMM").format(date));
 
-            // Customize X-axis labels to show only key dates
-            chart.setCustomXAxisTickLabelsFormatter(date -> {
-                return new SimpleDateFormat("dd-MM").format(date); // Format and display all dates
-            });
-
-            // Add a thin dotted horizontal line for the latest rate
             XYSeries horizontalLine = chart.addSeries("Horizontal Line",
                     List.of(dates.getFirst(), dates.getLast()),
                     List.of(latestRate, latestRate));
-            horizontalLine.setMarker(SeriesMarkers.NONE); // No markers
-            horizontalLine.setLineColor(new Color(50, 50, 255)); // Blue color
+            horizontalLine.setMarker(SeriesMarkers.NONE);
+            horizontalLine.setLineColor(new Color(50, 50, 255));
             horizontalLine.setLineStyle(new BasicStroke(1.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[]{5.0f}, 0.0f)); // Thin dotted line
 
-            // Add the main data series
             XYSeries series = chart.addSeries(baseCurrency.toUpperCase() + " to " + targetCurrency.toUpperCase(), dates, rates);
-            series.setMarker(SeriesMarkers.NONE); // No markers for data points
-            series.setLineColor(Color.BLUE); // Normal blue line
-            series.setLineStyle(new BasicStroke(2.0f)); // Solid line
+            series.setMarker(SeriesMarkers.NONE);
+            series.setLineColor(Color.BLUE);
+            series.setLineStyle(new BasicStroke(2.0f));
 
             createChartsDirectory();
             BitmapEncoder.saveBitmap(chart, "charts/chart", BitmapEncoder.BitmapFormat.PNG);

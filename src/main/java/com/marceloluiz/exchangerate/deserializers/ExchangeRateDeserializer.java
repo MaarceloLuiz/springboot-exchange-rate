@@ -23,7 +23,7 @@ public class ExchangeRateDeserializer {
         List<ExchangeRateDTO> dataList = new ArrayList<>();
         LocalDate today = LocalDate.now();
 
-        for(int i = 0; i < 30; i++){
+        for(int i = 0; i < 28; i++){
             LocalDate previousDates = today.minusDays(i);
             String json = apiConfiguration.getData(fetchJson(previousDates.toString(), baseCurrency, targetCurrency));
 
