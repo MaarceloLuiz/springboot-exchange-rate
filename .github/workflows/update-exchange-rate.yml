@@ -3,7 +3,7 @@ name: "Update Exchange Rate"
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 7 * * *"
+    - cron: "0 17 * * *"
   
 jobs:
   run-exchange-rate-app:
