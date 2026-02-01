@@ -3,7 +3,7 @@
 <!-- EXCHANGE-RATE-START -->
 ## Exchange Rate Chart
 
-![Exchange Rate Chart](charts/chart.png)*Updated at: 2026-01-31 17:19 by [MaarceloLuiz/springboot-exchange-rate](https://github.com/MaarceloLuiz/springboot-exchange-rate)*
+![Exchange Rate Chart](charts/chart.png)*Updated at: 2026-02-01 17:20 by [MaarceloLuiz/springboot-exchange-rate](https://github.com/MaarceloLuiz/springboot-exchange-rate)*
 
 
 <!-- EXCHANGE-RATE-END -->
